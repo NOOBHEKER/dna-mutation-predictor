@@ -1,0 +1,25 @@
+# dna-predict - runtime dependencies (CLI bot)
+# Install with:  python -m pip install -r requirements.txt
+# (predict.bat / predict.sh do this automatically on first run)
+
+# --- core ML ---
+torch>=2.0
+transformers>=4.30
+xgboost>=1.7
+onnxruntime>=1.15
+
+# --- data / scientific ---
+numpy>=1.24
+pandas>=1.5
+scikit-learn>=1.3
+matplotlib>=3.7
+biopython>=1.81
+requests>=2.31
+
+# --- CLI (rich terminal UI + autocomplete) ---
+rich>=13.0
+prompt_toolkit>=3.0
+
+# --- training / preprocessing (optional but in repo) ---
+datasets
+tqdm>=4.60

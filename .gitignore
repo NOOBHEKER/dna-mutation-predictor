@@ -1,0 +1,24 @@
+# --- venv / launcher build artifacts ---
+venv/
+*.egg-info/
+__pycache__/
+*.pyc
+
+# --- large model binaries (NOT committed — see data/README.md) ---
+# NOTE: data/scaler.pkl and data/variants.csv ARE committed (web-ready).
+data/esm_model.onnx
+data/esm_model.onnx.data
+data/model.pt
+data/processed_data.pt
+data/sklearn_model.pkl
+data/pca.pkl
+data/test_indices.pt
+
+# --- preprocessing / training logs ---
+data/*.txt
+data/*.log
+data/variant_summary.txt.gz
+
+# --- running / build artifacts ---
+catboost_info/
+*.png
