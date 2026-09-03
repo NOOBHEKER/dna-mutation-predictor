@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Agastyas Shii. MIT License.
 import pandas as pd
 import requests
 import gzip

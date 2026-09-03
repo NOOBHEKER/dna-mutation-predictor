@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Agastyas Shii. MIT License.
 """
 protein_graph.py — interactive protein visualization for the dna-predict CLI.
 

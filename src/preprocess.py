@@ -175,7 +175,8 @@ def preprocess():
 
     # Load ESM-2
     print("Loading ESM-2 model...")
-    import os
+# Copyright (c) 2026 Agastyas Shii. MIT License.
+import os
     torch.set_num_threads(os.cpu_count())
     tokenizer = AutoTokenizer.from_pretrained(ESM_MODEL_NAME)
     model = EsmModel.from_pretrained(ESM_MODEL_NAME)

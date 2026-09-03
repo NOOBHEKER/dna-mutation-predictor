@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Agastyas Shii. MIT License.
 """
 cli.py — dna-predict CLI Bot
 An animated, Cline-style terminal agent wrapping the DNA mutation predictor.

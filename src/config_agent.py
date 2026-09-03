@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Agastyas Shii. MIT License.
 """
 config_agent.py — "Config Agent": the second AI of the dna-predict CLI.
 

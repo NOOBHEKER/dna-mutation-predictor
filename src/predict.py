@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Agastyas Shii. MIT License.
 import os
 import torch
 import numpy as np
