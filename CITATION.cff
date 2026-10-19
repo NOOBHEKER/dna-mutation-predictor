@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "DNA Mutation Effect Predictor"
+abstract: >-
+  A research tool for classifying human missense mutations as likely
+  pathogenic or benign using ESM-2 protein embeddings and population
+  annotations. Includes a terminal interface, a Streamlit dashboard, and
+  reproducible evaluation artifacts.
+version: 1.0.0
+date-released: 2026-10-19
+license: MIT
+url: "https://github.com/NOOBHEKER/dna-mutation-predictor"
+repository-code: "https://github.com/NOOBHEKER/dna-mutation-predictor"
+keywords:
+  - bioinformatics
+  - genomics
+  - protein-language-model
+  - esm-2
+  - variant-effect-prediction
+  - clinvar
+  - machine-learning
+authors:
+  - name: "NOOBHEKER"
+    alias: "NOOBHEKER"

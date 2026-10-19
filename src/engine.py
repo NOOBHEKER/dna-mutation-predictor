@@ -1,4 +1,3 @@
-# Copyright (c) 2026 Agastyas Shii. MIT License.
 """
 engine.py — torch-free helpers for the CLI bot.
 

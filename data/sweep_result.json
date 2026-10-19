@@ -1,0 +1,12 @@
+{
+  "winner": "xgb d=7 lr=0.07",
+  "cv_acc": 0.8101,
+  "cv_auc": 0.8841,
+  "test_acc_05": 0.8050089445438283,
+  "threshold": 0.5,
+  "test_acc_tuned": 0.8050089445438283,
+  "test_auc": 0.8937131882202304,
+  "n_train": 2233,
+  "n_test": 559,
+  "saved": false
+}

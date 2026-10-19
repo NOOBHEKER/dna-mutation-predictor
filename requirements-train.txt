@@ -1,0 +1,5 @@
+# Dependencies for retraining the stacking/voting experiments.
+# The shipped head only needs requirements.txt, but src/train.py imports these.
+-r requirements.txt
+lightgbm>=4.0,<5
+catboost>=1.2,<2

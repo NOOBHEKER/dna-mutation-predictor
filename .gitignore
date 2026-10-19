@@ -1,24 +1,55 @@
-# --- venv / launcher build artifacts ---
-venv/
-*.egg-info/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
 
-# --- large model binaries (NOT committed — see data/README.md) ---
-# NOTE: data/scaler.pkl and data/variants.csv ARE committed (web-ready).
+# Model + data files that are too large to commit or are generated
 data/esm_model.onnx
 data/esm_model.onnx.data
-data/model.pt
-data/processed_data.pt
-data/sklearn_model.pkl
-data/pca.pkl
-data/test_indices.pt
-
-# --- preprocessing / training logs ---
-data/*.txt
-data/*.log
 data/variant_summary.txt.gz
+data/variant_summary.txt
+data/model.pt
+data/_fetch_windows.pkl
+data/_emb_ckpt.npz
+data/_stack_oof_k*.npz
+data/esm_model.onnx_data
+data/evo2_cache/
+data/*.log
 
-# --- running / build artifacts ---
-catboost_info/
-*.png
+# Local caches / secrets
+.env
+.env.*
+*.key
+*.pem
+secrets.json
+NVIDIA_API_KEY
+HF_TOKEN
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Generated outputs
+graph_selftest.png
+graph3d_selftest.png
+predictions.csv
+*.tmp

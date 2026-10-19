@@ -1,4 +1,3 @@
-# Copyright (c) 2026 Agastyas Shii. MIT License.
 """
 config_agent.py — "Config Agent": the second AI of the dna-predict CLI.
 
@@ -25,7 +24,9 @@ from difflib import get_close_matches
 
 import pandas as pd
 
-VARIANTS_CSV = "data/variants.csv"
+from src.paths import data_path
+
+VARIANTS_CSV = data_path("variants.csv")
 
 # Mapping of 3-letter to 1-letter amino acids (kept local so importing this
 # module never pulls in torch/transformers — that stays lazy in cli.py)

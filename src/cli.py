@@ -1,4 +1,3 @@
-# Copyright (c) 2026 Agastyas Shii. MIT License.
 """
 cli.py — dna-predict CLI Bot
 An animated, Cline-style terminal agent wrapping the DNA mutation predictor.
@@ -37,7 +36,8 @@ from rich.table import Table
 from rich.text import Text
 
 from src.config_agent import (analyze, interactive_fix, nearby_variants,
-                              suggest_genes, suggest_variants, variants_for_gene)
+                              suggest_genes, variants_for_gene)
+from src.paths import data_path
 
 BANNER_LINES = [
     r" ____  _   _    _    ____  _____   _   ____  _______ ",
@@ -286,9 +286,9 @@ class DNABot:
                 f"{sum(len(v) for v in by_gene.values())} missense variants"
                 f"[/dim]")
 
-        for f, label in (("data/scaler.pkl", "ensemble heads"),
-                         ("data/esm_model.onnx", "ESM-2 ONNX encoder"),
-                         ("data/variants.csv", "ClinVar variants")):
+        for f, label in ((data_path("scaler.pkl"), "XGBoost head"),
+                         (data_path("esm_model.onnx"), "ESM-2 ONNX encoder"),
+                         (data_path("variants.csv"), "ClinVar variants")):
             _ok(label, "found" if os.path.exists(f) else "MISSING")
 
         _ok("prediction engine", "lazy — wakes on first prediction")
@@ -317,7 +317,7 @@ class DNABot:
             transformers.logging.disable_progress_bar()
             from transformers import AutoTokenizer
             from src.predict import load_model
-            model, selector, scaler = load_model()
+            model, selector, scaler, sc_extra, base_models = load_model()
             tokenizer = AutoTokenizer.from_pretrained(ESM_MODEL_NAME)
             if os.path.exists(ONNX_PATH):
                 esm_model = OnnxEsm(ONNX_PATH)
@@ -335,7 +335,8 @@ class DNABot:
             self.engine = {
                 "model": model, "selector": selector, "scaler": scaler,
                 "tokenizer": tokenizer, "esm_model": esm_model,
-                "device": device,
+                "device": device, "base_models": base_models,
+                "sc_extra": sc_extra,
             }
         if getattr(self.engine["esm_model"], "onnx_mode", False):
             detail = "ONNX encoder · CPU fast path"
@@ -343,7 +344,7 @@ class DNABot:
             detail = ("GPU (CUDA) · " if "cuda" in str(
                 self.engine["device"]) else "CPU · ") + "torch encoder"
         c.print(f"  [green]✓[/green] engine online [dim]{detail} · "
-                f"XGB+LGBM+CAT ensemble[/dim]")
+                f"XGBoost head[/dim]")
 
     # ------------------------------------------------------------------
     # Config card display
@@ -423,7 +424,20 @@ class DNABot:
     # ------------------------------------------------------------------
     # Verdict panel
     # ------------------------------------------------------------------
-    def verdict_panel(self, st, label, prob, elapsed):
+    @staticmethod
+    def _evo2_parts(msg):
+        """Parse '|esm=..|evo2=..|llr=..|dnabert=..' segments."""
+        info = {}
+        for seg in str(msg or "").split("|"):
+            if "=" in seg:
+                k, _, v = seg.partition("=")
+                try:
+                    info[k.strip()] = float(v)
+                except ValueError:
+                    pass
+        return info
+
+    def verdict_panel(self, st, label, prob, elapsed, msg=""):
         c = self.console
         patho = label == 1
         verdict = "PATHOGENIC" if patho else "BENIGN"
@@ -437,6 +451,23 @@ class DNABot:
         tbl.add_column("v")
         tbl.add_row("variant", f"[bold white]{st.gene} {st.hgvsp}[/]")
         tbl.add_row("change", f"{st.wt_1} → {st.mt_1} @ position {st.pos}")
+        scores = self._evo2_parts(msg)
+        if scores:
+            if "esm" in scores:
+                tbl.add_row("esm-2",
+                            f"{scores.get('esm', prob):.4f} (protein view)")
+            if "tab" in scores:
+                tbl.add_row("population",
+                            f"{scores['tab']} (gnomAD/SIFT/PolyPhen)")
+            if "evo2" in scores:
+                tbl.add_row("evo2-7b",
+                            f"{scores['evo2']:.4f} (DNA LLR {scores.get('llr', 0.0):+.2f})")
+            if "dnabert" in scores:
+                tbl.add_row("dnabert-2",
+                            f"{scores['dnabert']:.4f} (DNA cosine sim)")
+            tbl.add_row("blended", f"[bold]{prob:.4f}[/]")
+        else:
+            tbl.add_row("model", "[dim]esm-2 only[/dim]")
         tbl.add_row("verdict",
                     Panel(Text(verdict, style=f"bold white on {col}",
                                justify="center"), box=box.ROUNDED))
@@ -524,7 +555,7 @@ class DNABot:
         self.stats["runs"] += 1
         self.stats["pathogenic" if label == 1 else "benign"] += 1
         self.history.append((st.gene, st.hgvsp, label, prob))
-        self.verdict_panel(st, label, prob, time.time() - t0)
+        self.verdict_panel(st, label, prob, time.time() - t0, msg)
         self.post_prediction(st)
         self.console.print()
 
@@ -586,9 +617,15 @@ class DNABot:
                 if label is None:
                     failed += 1
                 else:
+                    evo = self._evo2_parts(msg)
                     results.append({"hgvsp": s.hgvsp, "pos": s.pos,
                                     "wt": s.wt_1, "mt": s.mt_1,
-                                    "label": label, "prob": prob})
+                                    "label": label, "prob": prob,
+                                    "esm": evo.get("esm"),
+                                    "pop": evo.get("tab"),
+                                    "evo2": evo.get("evo2"),
+                                    "llr": evo.get("llr"),
+                                    "dnabert": evo.get("dnabert")})
                 prog.advance(task)
 
         results.sort(key=lambda r: -r["prob"])
@@ -605,12 +642,21 @@ class DNABot:
         tbl.add_column("#", justify="right", style="dim", width=4)
         tbl.add_column("variant", style="white")
         tbl.add_column("change", style="dim")
-        tbl.add_column("probability", justify="right")
+        tbl.add_column("esm-2", justify="right", style="dim")
+        tbl.add_column("pop", justify="right", style="dim")
+        tbl.add_column("evo2", justify="right", style="dim")
+        tbl.add_column("dnabert", justify="right", style="dim")
+        tbl.add_column("blended", justify="right")
         tbl.add_column("verdict", justify="center")
         for i, r in enumerate(results, 1):
             col = "red" if r["label"] == 1 else "green"
+            esm_s = f"{r['esm']:.3f}" if r.get("esm") is not None else "—"
+            pop_s = f"{r['pop']:.3f}" if r.get("pop") else "—"
+            evo_s = (f"{r['evo2']:.3f} ({r['llr']:+.1f})"
+                     if r.get("evo2") is not None else "—")
+            dna_s = f"{r['dnabert']:.3f}" if r.get("dnabert") is not None else "—"
             tbl.add_row(str(i), r["hgvsp"], f"{r['wt']}{r['pos']}{r['mt']}",
-                        f"{r['prob']:.4f}",
+                        esm_s, pop_s, evo_s, dna_s, f"{r['prob']:.4f}",
                         f"[{col}]{'PATHO' if r['label'] else 'benign'}[/]")
         self.console.print(tbl)
 
@@ -691,9 +737,9 @@ class DNABot:
                                  "(AlphaFold DB)…[/]", spinner="bot"):
             from src.protein_graph import show_protein_3d
         self.console.print(
-            f"  [green]✓[/green] 3D view opening — [dim]drag to rotate, "
-            f"scroll to zoom; falls back to a synthetic backbone if "
-            f"AlphaFold is unreachable.[/dim]")
+            "  [green]✓[/green] 3D view opening — [dim]drag to rotate, "
+            "scroll to zoom; falls back to a synthetic backbone if "
+            "AlphaFold is unreachable.[/dim]")
         show_protein_3d(gene, seq, st.wt_1, st.pos, st.mt_1, uniprot=uniprot,
                         results=results, verdict=verdict)
 
@@ -747,7 +793,7 @@ class DNABot:
         tbl.add_row("benign", str(len(variants) - patho))
         tbl.add_row("top variant", variants[0][0] if variants else "—")
         tbl.add_row("batch predict", f"[bold]all {gene}[/]")
-        self.console.print(Panel(tbl, title=f"[bold cyan]🧾 gene card[/]",
+        self.console.print(Panel(tbl, title="[bold cyan]🧾 gene card[/]",
                                  border_style="cyan", box=box.ROUNDED))
 
     def cmd_genes(self, args):
@@ -918,6 +964,8 @@ def _make_prompt_session():
 # Self-test (no model load): python -m src.cli --selftest
 # ----------------------------------------------------------------------
 def _selftest():
+    import tempfile
+
     console = Console()
     ok = True
 
@@ -951,8 +999,8 @@ def _selftest():
             results=[{"hgvsp": "p.Cys30Gly", "prob": 0.91, "label": 1},
                      {"hgvsp": "p.Leu35Pro", "prob": 0.12, "label": 0}],
             verdict="PATHOGENIC", block=False)
-        out = os.path.abspath(os.path.join(
-            os.path.dirname(__file__), "..", "data", "graph_selftest.png"))
+        out = os.path.join(tempfile.gettempdir(),
+                           "dna_predict_graph_selftest.png")
         fig.savefig(out, dpi=80)
         console.print(f"  [green]✓[/green] 2D graph smoke test saved: {out}")
     except Exception as ex:
@@ -968,8 +1016,8 @@ def _selftest():
             "INS", seq3d, "C", 30, "G", uniprot=None,
             results=[{"hgvsp": "p.Cys30Gly", "prob": 0.91, "label": 1}],
             verdict="PATHOGENIC", block=False)
-        out = os.path.abspath(os.path.join(
-            os.path.dirname(__file__), "..", "data", "graph3d_selftest.png"))
+        out = os.path.join(tempfile.gettempdir(),
+                           "dna_predict_graph3d_selftest.png")
         fig.savefig(out, dpi=80)
         console.print(f"  [green]✓[/green] 3D graph smoke test saved: {out}")
         _ = synthetic_structure(seq3d)
@@ -1020,7 +1068,7 @@ def _demo():
     pause(0.7)
 
     # ---- proceed prompt (simulated) --------------------------------------
-    type_out(c, "  dna-bot \u276f looks complete. Running the ensemble\u2026",
+    type_out(c, "  dna-bot \u276f looks complete. Running the classifier\u2026",
              delay=0.004)
     pause(0.5)
 
@@ -1033,7 +1081,7 @@ def _demo():
             ("ESM-2 embed (wild-type)", "64 residues \u00b7 ONNX", 2.05),
             ("ESM-2 embed (mutant)", "Arg175His \u00b7 ONNX", 2.1),
             ("feature select + scale", "2048 dims -> selector", 2.15),
-            ("ensemble vote", "XGB \u00b7 LGBM \u00b7 CAT", 2.2)):
+            ("classifier", "XGBoost \u00b7 500 trees", 2.2)):
         pause(0.1)
         c.print(f"  [green]\u2713[/green] [bold]{_name}[/bold] "
                 f"[dim]\u2014 {_detail} ({_t0:.1f}s)[/dim]")

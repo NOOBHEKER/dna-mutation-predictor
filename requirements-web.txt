@@ -1,0 +1,3 @@
+# Streamlit dashboard.
+-r requirements.txt
+streamlit>=1.30,<2

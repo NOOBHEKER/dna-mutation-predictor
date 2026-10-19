@@ -1,15 +1,13 @@
-# Copyright (c) 2026 Agastyas Shii. MIT License.
 import pandas as pd
-import requests
 import gzip
-import shutil
 import os
-from tqdm import tqdm
+
+from src.paths import data_path
 
 # ClinVar FTP URL for variant summary
 CLINVAR_URL = "ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz"
-RAW_DATA_PATH = "data/variant_summary.txt.gz"
-FILTERED_DATA_PATH = "data/variants.csv"
+RAW_DATA_PATH = data_path("variant_summary.txt.gz")
+FILTERED_DATA_PATH = data_path("variants.csv")
 
 def download_data():
     print(f"Downloading ClinVar data from {CLINVAR_URL}...")
@@ -116,6 +114,6 @@ def filter_variants():
     print(f"Final dataset size: {len(df_balanced)} ( {min_count} Benign, {min_count} Pathogenic )")
 
 if __name__ == "__main__":
-    os.makedirs("data", exist_ok=True)
+    os.makedirs(data_path(""), exist_ok=True)
     download_data()
     filter_variants()
