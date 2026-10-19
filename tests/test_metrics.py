@@ -1,8 +1,8 @@
 """Recompute the headline metric from the committed artifacts.
 
 This is the strongest reproducibility check in the suite. It intentionally
-requires torch, because the feature matrix is a torch archive; CI runs it in a
-separate job. The test is skipped elsewhere.
+requires torch, because the feature matrix is a torch archive. The test is
+skipped when torch is unavailable.
 """
 from __future__ import annotations
 

@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `scripts/make_metrics.py` — recomputes every published metric from committed
   artifacts.
 - `scripts/export_onnx.py` — regenerates the optional ESM-2 ONNX fast path.
-- Offline test suite (`tests/`) and GitHub Actions CI.
+- Offline test suite (`tests/`).
 - Documentation: model card, data provenance, architecture, reproduction guide,
   troubleshooting, contribution guide, security policy, and code of conduct.
 - Portable `predict.bat` / `predict.sh` and `start-web.bat` / `start-web.sh`

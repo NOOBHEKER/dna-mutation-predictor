@@ -7,7 +7,7 @@ network access and substantially more time/disk.
 ## 1. Environment
 
 Use **Python 3.10, 3.11, or 3.12** (3.12 recommended). Python 3.13+ may work but
-is not covered by CI.
+has not been part of the tested matrix.
 
 ```bash
 python -m venv venv
@@ -57,7 +57,11 @@ pytest -q
 ```
 
 Tests are offline. `tests/test_metrics.py` needs `torch`; it is skipped if torch
-is unavailable. CI installs the CPU PyTorch wheel and runs the full suite.
+is unavailable. On a CPU-only machine, install the CPU PyTorch wheel first:
+
+```bash
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+```
 
 ## 4. Smoke-test the CLI
 

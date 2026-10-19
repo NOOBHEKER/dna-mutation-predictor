@@ -2,7 +2,6 @@
 
 **Research-grade missense-variant triage with protein language models.**
 
-[![CI](https://github.com/NOOBHEKER/dna-mutation-predictor/actions/workflows/ci.yml/badge.svg)](https://github.com/NOOBHEKER/dna-mutation-predictor/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Research use only](https://img.shields.io/badge/use-research%20only-red.svg)](#disclaimer)
@@ -281,7 +280,8 @@ ruff check .
 ```
 
 The test suite is offline. Tests that need `torch` are skipped automatically if
-it is not installed; CI installs the CPU PyTorch wheel and runs everything.
+it is not installed; with dependencies present the full suite runs in about a
+minute.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

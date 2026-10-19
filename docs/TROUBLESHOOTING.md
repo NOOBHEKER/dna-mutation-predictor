@@ -80,8 +80,8 @@ streamlit run webapp/app.py --server.port 8502
 
 **`tests/test_metrics.py` is skipped**
 Torch is not installed in that environment. This is intentional; the test is
-skipped gracefully so lightweight environments can still run the suite. CI
-installs CPU torch and exercises it.
+skipped gracefully so lightweight environments can still run the suite. Install
+CPU torch if you want to exercise it.
 
 **Metrics differ slightly**
 Tiny floating-point differences across BLAS/library versions are expected.
